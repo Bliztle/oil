@@ -1,0 +1,16 @@
+[package]
+name = "orphan-instance-lang"
+version = "0.1.0"
+authers = ["Asbjørn Rysgaard Eriksen <mail@bliztle.com>"]
+edition = "2021"
+
+[lints.clippy]
+pedantic = "warn"
+
+[build-dependencies]
+lalrpop = "0.22.0"
+
+[dependencies]
+typelist = { path = "../typelist" }
+clap = { version = "4.5.23", features = ["derive"] }
+lalrpop-util = { version = "0.22.0", features = ["lexer", "unicode"] }
