@@ -1,4 +1,4 @@
-use crate::ast::{Definition, Program, Ident, Impl, Type, Function, Parameter, Expr, Literal};
+use crate::ast::{BinOp, Definition, Program, TraitMethod, Ident, Impl, Type, Function, Parameter, Expr, Literal};
 use std::str::FromStr;
 
 grammar;
@@ -13,7 +13,11 @@ definition: Definition = {
 }
 
 pub trait: Definition = {
-    "trait" <i:ident> => Definition::Trait(i, vec![])
+    "trait" <i:ident> "{" <methods:trait_method*> "}"=> Definition::Trait(i, methods)
+}
+
+pub trait_method: TraitMethod = {
+    "fn" <i:ident> "(" <parameters:parameter*> ")" "->" <return_type:explicit_type> => TraitMethod { ident: i, parameters, return_type }
 }
 
 pub impl: Definition = {
@@ -28,7 +32,7 @@ pub mod: Definition = {
 }
 
 pub func: Function = {
-    "fn" <i:ident> "(" <parameters:parameter*> ")" <return_type:("->" <explicit_type>)?> "{" <body:expr*> "}" => Function { 
+    "fn" <i:ident> "(" <parameters:parameter*> ")" <return_type:("->" <explicit_type>)?> <body:block_expr> => Function { 
         ident: i,
         parameters,
         return_type,
@@ -44,17 +48,54 @@ pub explicit_type: Type = {
     "(" ")" => Type::Unit,
     "i32" => Type::I32,
     "u32" => Type::U32,
-    "(" <parameters:Comma<parameter>?> ")" "->" <return_type:explicit_type> => Type::Function(parameters.unwrap_or(vec![]), return_type.into()),
+    "fn" "(" <parameters:Comma<parameter>?> ")" "->" <return_type:explicit_type> => Type::Function(parameters.unwrap_or(vec![]), return_type.into()),
     ident => Type::Ident(<>)
 }
 
-pub expr: Expr = {
-    r"[0-9]+" => Expr::Literal(Literal::I32(i32::from_str(<>).unwrap())),
-    r"[0-9]?\.[0-9]+" => Expr::Literal(Literal::U32(u32::from_str(<>).unwrap())),
-    ident => Expr::Ident(<>)
+pub expr_statement: Expr = {
+    "let" <i:ident> "=" <value:expr> => Expr::Let(i, value.into()),
+    block_expr => <>,
+    invocation_expr => <>,
+    if_expr => <>,
 }
 
-ident: Ident = r"[a-zA-Z_][a-zA-Z_0-9]*" => Ident(<>.into());
+pub expr: Expr = {
+    <left:expr> "==" <right:expr2> => Expr::Binary(left.into(), BinOp::Plus, right.into()),
+    <left:expr> "<"  <right:expr2> => Expr::Binary(left.into(), BinOp::LT, right.into()),
+    <left:expr> "<=" <right:expr2> => Expr::Binary(left.into(), BinOp::LTE, right.into()),
+    <left:expr> ">"  <right:expr2> => Expr::Binary(left.into(), BinOp::GT, right.into()),
+    <left:expr> ">=" <right:expr2> => Expr::Binary(left.into(), BinOp::GTE, right.into()),
+    expr2 => <>
+}
+
+expr2: Expr = {
+    <left:expr2> "+" <right:expr3> => Expr::Binary(left.into(), BinOp::Plus, right.into()),
+    <left:expr2> "-" <right:expr3> => Expr::Binary(left.into(), BinOp::Minus, right.into()),
+    expr3 => <>
+}
+
+expr3: Expr = {
+    <left:expr3> "*" <right:expr4> => Expr::Binary(left.into(), BinOp::Mult, right.into()),
+    <left:expr3> "/" <right:expr4> => Expr::Binary(left.into(), BinOp::Div, right.into()),
+    expr4 => <>
+}
+
+expr4: Expr = {
+    r"[0-9]+" => Expr::Literal(Literal::I32(i32::from_str(<>).unwrap())),
+    r"[0-9]*\.[0-9]+" => Expr::Literal(Literal::F32(<>.parse().unwrap())),
+    ident => Expr::Ident(<>),
+    "(" <e:expr> ")" => Expr::Paren(e.into()),
+    block_expr => <>,
+    invocation_expr => <>,
+    if_expr => <>,
+}
+
+// Expressions which are also statements
+block_expr: Expr = "{" <mut exprs:(<expr_statement> ";")*> <ret:expr?> "}" => { if let Some(e) = ret { exprs.push(e) }; Expr::Block(exprs) };
+invocation_expr: Expr = <i:ident> "(" <exprs:Comma<expr>?> ")" => Expr::Invocation(i, exprs.unwrap_or(vec![]));
+if_expr: Expr = "if" <cond:expr> <yes:block_expr> "else" <no:block_expr> => Expr::If(cond.into(), yes.into(), no.into());
+
+pub ident: Ident = r"[a-zA-Z_][a-zA-Z_0-9]*" => Ident(<>.into());
 
 // Utility Definitions
 Comma<T>: Vec<T> = <mut v:(<T> ",")*><e:T> => { v.push(e); v };

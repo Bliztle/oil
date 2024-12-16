@@ -46,20 +46,31 @@ pub struct Parameter {
 pub enum Expr {
     Literal(Literal),
     Ident(Ident),
+    Paren(Box<Expr>),
     Binary(Box<Expr>, BinOp, Box<Expr>),
     Let(Ident, Box<Expr>),
+    If(Box<Expr>, Box<Expr>, Box<Expr>),
+    Block(Vec<Expr>),
+    Invocation(Ident, Vec<Expr>),
 }
 
 #[derive(Debug)]
 pub enum Literal {
     I32(i32),
-    U32(u32),
+    F32(f32),
 }
 
 #[derive(Debug)]
 pub enum BinOp {
+    Mult,
+    Div,
     Plus,
     Minus,
+    LT,
+    LTE,
+    GT,
+    GTE,
+    Equal,
 }
 
 #[derive(Debug)]
@@ -83,7 +94,7 @@ pub struct Function {
     ident: Ident,
     parameters: Vec<Parameter>,
     return_type: Option<Type>,
-    body: Vec<Expr>,
+    body: Expr,
 }
 
 #[cfg(test)]
@@ -101,7 +112,16 @@ mod tests {
             "fn my_function (a: A) -> A { a }",
         ];
 
+        let bad = [
+            "fn my_function my_function () {}",
+            "fn my_function ( } {)",
+            "fn my_function (a: A) { fn }",
+            "fn my_function (a A) { }",
+            "fn my_function (a) { }",
+        ];
+
         assert!(good.iter().all(|s| dbg!(parser.parse(dbg!(s))).is_ok()));
+        assert!(bad.iter().all(|s| dbg!(parser.parse(dbg!(s))).is_err()));
     }
 
     #[test]
@@ -122,17 +142,97 @@ mod tests {
             format!("impl MyImpl MyTrait for MyStruct {{ {func} }}"),
         ];
 
-        assert!(good
-            .into_iter()
-            .all(|s| dbg!(parser.parse(dbg!(&s))).is_ok()));
-        assert!(bad.into_iter().all(|s| dbg!(parser.parse(&s)).is_err()));
+        assert!(good.iter().all(|s| dbg!(parser.parse(dbg!(s))).is_ok()));
+        assert!(bad.iter().all(|s| dbg!(parser.parse(dbg!(s))).is_err()));
     }
 
     #[test]
     fn test_parse_trait() {
         let parser = oil::traitParser::new();
-        let res = parser.parse("trait aname");
-        println!("{res:?}");
-        assert!(res.is_ok());
+
+        let good = [
+            "trait MyTrait {}",
+            "trait MyTrait { }",
+            "trait MyTrait { fn my_func() -> A }",
+            "trait MyTrait { fn my_func(a: A) -> A }",
+            "trait MyTrait { fn my_func(a: A) -> () }",
+        ];
+
+        let bad = ["trait trait", "trait MyTrait"];
+
+        assert!(good.iter().all(|s| dbg!(parser.parse(dbg!(s))).is_ok()));
+        assert!(bad.iter().all(|s| dbg!(parser.parse(dbg!(s))).is_err()));
+    }
+
+    #[test]
+    fn test_parse_ident() {
+        let parser = oil::identParser::new();
+
+        let good = ["a1", "_a", "_", "kjdngf_34", "gdfg3"];
+
+        let bad = [
+            "1a", "sdf@f", // Keywords
+            "fn", "trait", "impl", "for", "mod", // "if",
+            // "else",
+            "i32", "u32",
+        ];
+
+        assert!(good.iter().all(|s| dbg!(parser.parse(dbg!(s))).is_ok()));
+        assert!(bad.iter().all(|s| dbg!(parser.parse(dbg!(s))).is_err()));
+    }
+
+    #[test]
+    fn test_parse_expr() {
+        let parser = oil::exprParser::new();
+
+        let good = [
+            "1",
+            "324908",
+            "0.654",
+            "234.9",
+            "a",
+            "fdsf3",
+            "1 + 2",
+            "{ 1 }",
+            "( 1 )",
+            "( 1 + 2 )",
+            "if 1 { 1 } else { 2 }",
+            "if (3) { 1 } else { 2 }",
+            "if (3 == 2) { 1 } else { 2 }",
+            "if 3 > 2 { 1 } else { 2 }",
+        ];
+
+        let bad = ["543.", "4s", "let 2 = 3", "1 2", "1,2", "{ 1 2 }"];
+
+        assert!(good.iter().all(|s| dbg!(parser.parse(dbg!(s))).is_ok()));
+        assert!(bad.iter().all(|s| dbg!(parser.parse(dbg!(s))).is_err()));
+    }
+
+    #[test]
+    fn test_parse_expr_statement() {
+        let parser = oil::expr_statementParser::new();
+
+        let good = [
+            "if 1 { 1 } else { 2 }",
+            "if (3) { 1 } else { 2 }",
+            "if (3 == 2) { 1 } else { 2 }",
+            "if 3 > 2 { 1 } else { 2 }",
+            "let x = 3",
+        ];
+
+        let bad = [
+            "1",
+            "324908",
+            "0.654",
+            "234.9",
+            "a",
+            "fdsf3",
+            "1 + 2",
+            "( 1 )",
+            "( 1 + 2 )",
+        ];
+
+        assert!(good.iter().all(|s| dbg!(parser.parse(dbg!(s))).is_ok()));
+        assert!(bad.iter().all(|s| dbg!(parser.parse(dbg!(s))).is_err()));
     }
 }
