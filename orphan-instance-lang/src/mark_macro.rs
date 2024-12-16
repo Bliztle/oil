@@ -1,6 +1,9 @@
 use std::marker::PhantomData;
 use typelist::typelist;
 
+struct Foo;
+struct Bar;
+
 typelist!(3, Foo, Bar);
 
 // Node struct with generic state

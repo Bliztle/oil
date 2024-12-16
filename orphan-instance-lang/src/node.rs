@@ -2,6 +2,7 @@
 //! It exposes an annotation system which strictly enforces type safety on existing annotations,
 //! only allowing get / set operations with preconfigured types
 
+use crate::ast::Type;
 use std::{
     any::{Any, TypeId},
     collections::HashMap,
@@ -11,10 +12,10 @@ use typelist::typelist;
 
 pub trait Annotation: 'static {}
 
-struct Type;
-impl Annotation for Type {}
-
+// struct Type;
 typelist!(1, Type);
+
+impl Annotation for Type {}
 
 #[derive(Debug)]
 pub struct Node<T, S = Nil> {
@@ -101,5 +102,18 @@ impl<T, S> Node<T, S> {
         self.annotations
             .get(&TypeId::of::<U>())
             .and_then(|boxed| boxed.downcast_ref::<U>())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_add_get_annotation() {
+        let node: Node<i32> = 0.into();
+        let mut node = node.add_annotation(Type::I32);
+        let _: &Type = node.get_annotation();
+        node.change_annotation(Type::U32);
     }
 }
