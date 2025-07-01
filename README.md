@@ -1,4 +1,4 @@
-![.NET status](https://github.com/Bliztle/oil/actions/workflows/build.yml/badge.svg)
+![build status](https://github.com/Bliztle/oil/actions/workflows/build.yml/badge.svg)
 
 # Orphan Instance Lang (OIL)
 

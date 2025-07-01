@@ -4,6 +4,10 @@ version = "0.1.0"
 authors = ["Asbjørn Rysgaard Eriksen <mail@bliztle.com>"]
 edition = "2021"
 
+[[bin]]
+name = "oil"
+path = "src/main.rs"
+
 [lints.clippy]
 pedantic = "warn"
 
