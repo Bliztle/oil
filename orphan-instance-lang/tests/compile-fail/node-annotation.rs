@@ -13,11 +13,11 @@ fn doesnt_compile() {
     //~^^ error: mismatched types [E0308]
     let node = node.add_annotation(Type::I32);
     let node = node.add_annotation(Type::I32); // Shouldn't be able to add annotation twice
-    //~^ error: the trait bound `orphan_instance_lang::node::Cons<Type, orphan_instance_lang::node::Nil>: orphan_instance_lang::node::Excludes<_>` is not satisfied [E0277]
+    //~^ error: the trait bound `Cons<Type, Nil>: Excludes<_>` is not satisfied [E0277]
     let _ = node.add_annotation_unchecked(Type::I32); // Shouldn't be able to add unchecked when annotation is already checked
-    //~^ error: the trait bound `orphan_instance_lang::node::Cons<Type, orphan_instance_lang::node::Cons<Type, orphan_instance_lang::node::Nil>>: orphan_instance_lang::node::Excludes<_>` is not satisfied [E0277]
+    //~^ error: the trait bound `Cons<Type, Cons<Type, Nil>>: Excludes<_>` is not satisfied [E0277]
     let _: &Type = node.get_annotation_unchecked(); // Shouldn't be able to get unchecked when annotation is already checked
-    //~^ error: the trait bound `orphan_instance_lang::node::Cons<Type, orphan_instance_lang::node::Cons<Type, orphan_instance_lang::node::Nil>>: orphan_instance_lang::node::Excludes<_>` is not satisfied [E0277]
+    //~^ error: the trait bound `Cons<Type, Cons<Type, Nil>>: Excludes<_>` is not satisfied [E0277]
     //~^^ error: mismatched types [E0308]
 }
 

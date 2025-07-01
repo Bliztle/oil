@@ -11,16 +11,18 @@ env:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        crate: ["orphan-instance-lang", "typelist"]
 
     steps:
     - uses: actions/checkout@v4
       with:
         submodules: recursive
-    - name: Clean build artifacts
-      run: cargo clean
-    - name: Build
-      run: cargo build --verbose
-    - name: Run tests
-      run: cargo test --verbose -p orphan-instance-lang
+    - name: Build ${{ matrix.crate }}
+      run: cargo build --verbose -p ${{ matrix.crate }}
+    - name: Test ${{ matrix.crate }}
+      run: cargo test --verbose -p ${{ matrix.crate }}
+
