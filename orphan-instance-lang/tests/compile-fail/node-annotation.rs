@@ -6,10 +6,10 @@ use orphan_instance_lang::node::Node;
 fn doesnt_compile() {
     let node: Node<i32> = 0.into();
     let _: &Type = node.get_annotation(); // Shouldn't be able to get annotation not added
-    //~^ error: the trait bound `orphan_instance_lang::node::Nil: Annotation` is not satisfied [E0277]
+    //~^ error: the trait bound `Nil: Annotation` is not satisfied [E0277]
     //~^^ error: mismatched types [E0308]
     node.change_annotation(Type::I32); // Shouldn't be able to change annotation not added
-    //~^ error: the trait bound `orphan_instance_lang::node::Nil: Annotation` is not satisfied [E0277]
+    //~^ error: the trait bound `Nil: Annotation` is not satisfied [E0277]
     //~^^ error: mismatched types [E0308]
     let node = node.add_annotation(Type::I32);
     let node = node.add_annotation(Type::I32); // Shouldn't be able to add annotation twice

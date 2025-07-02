@@ -1,71 +1,100 @@
-//! Flexible and easy abstraction over the multistate typestate pattern
+//! # `typelist`
 //!
-//! Provides an easy and flexible way to apply an extended version of the typestate pattern to
-//! structs.
+//! A flexible, zero-cost abstraction over the *typestate pattern* using type-level lists.
 //!
-//! # Example
-//! ```
+//! `typelist` enables you to track and enforce compile-time state transitions on generic types.
+//! It's especially useful in advanced Rust patterns like:
+//!
+//! - Builder APIs that enforce construction order
+//! - AST node annotation tracking during compilation
+//! - Compile-time validation of state-dependent functionality
+//!
+//! ## Features
+//!
+//! - Declarative macro-based type list generation
+//! - Trait-based introspection with `Includes<T>`
+//! - Composable and ergonomic design
+//! - No runtime overhead
+//!
+//! ## Example
+//!
+//! ```rust
 //! use std::marker::PhantomData;
 //! use typelist::typelist;
 //!
-//! // Create possible states
+//! // Define state marker types
 //! struct FooState;
 //! struct BarState;
 //!
-//! // Allow typelist to work its magic
+//! // Generate a type list type from your marker types
 //! typelist!(2, FooState, BarState);
 //!
-//! // Struct using the typestate
+//! // State-tracked struct
 //! struct Node<S = Nil> {
-//!   _state: PhantomData<S>,
+//!     _state: PhantomData<S>,
 //! }
 //!
 //! impl<S> Node<S> {
-//!   pub fn new() -> Self {
-//!     Node { _state: PhantomData }
-//!   }
+//!     pub fn new() -> Self {
+//!         Node { _state: PhantomData }
+//!     }
 //!
-//!   // Function adding the FooState state
-//!   pub fn foo(&self) -> Node<Cons<FooState, S>> {
-//!     Node::new()
-//!   }
+//!     // Add states incrementally
+//!     pub fn foo(&self) -> Node<Cons<FooState, S>> {
+//!         Node::new()
+//!     }
 //!
-//!   // Function adding the BarState state
-//!   pub fn bar(&self) -> Node<Cons<BarState, S>> {
-//!     Node::new()
-//!   }
+//!     pub fn bar(&self) -> Node<Cons<BarState, S>> {
+//!         Node::new()
+//!     }
 //! }
 //!
-//! // This implementation can only be used if FooState has been added
+//! // Methods conditionally available based on state
+//!
 //! impl<S> Node<S> where S: Includes<FooState> {
-//!   pub fn only_on_foo(&self) { }
+//!     pub fn only_on_foo(&self) {}
 //! }
 //!
-//! // This implementation can only be used if BarState has been added
 //! impl<S> Node<S> where S: Includes<BarState> {
-//!   pub fn only_on_bar(&self) { }
+//!     pub fn only_on_bar(&self) {}
 //! }
 //!
-//! // This implementation can only be used if both FooState and BarState has been added
-//! impl<S> Node<S> where S: Includes<BarState> + Includes<FooState> {
-//!   pub fn only_on_foo_and_bar(&self) { }
+//! impl<S> Node<S> where S: Includes<FooState> + Includes<BarState> {
+//!     pub fn only_on_foo_and_bar(&self) {}
 //! }
 //!
 //! let node = Node::new();
 //!
-//! // Allowed
+//! // ✅ Allowed
 //! node.foo().only_on_foo();
 //! node.bar().foo().only_on_foo();
-//! node.foo().bar().only_on_foo();
-//!
 //! node.foo().bar().only_on_foo_and_bar();
-//! node.bar().foo().only_on_foo_and_bar();
 //!
-//! // Not Allowed
-//! // node.bar().only_on_foo();
-//! // node.foo().only_on_foo_and_bar();
+//! // ❌ Compile-time errors:
+//! // node.only_on_foo();
 //! // node.bar().only_on_foo_and_bar();
 //! ```
+//!
+//! ## How It Works
+//!
+//! `typelist!` expands into a linked-list-like set of marker types (e.g. `Cons<Foo, Cons<Bar, Nil>>`).
+//! You can then write trait bounds like `S: Includes<Foo>` to enforce that a type's history includes a particular marker.
+//!
+//! This enables highly expressive APIs with compile-time guarantees about what operations are valid and in what order.
+//!
+//! ## When to Use
+//!
+//! Use this crate when you want:
+//!
+//! - Safer builder patterns without `Option<T>` or runtime panics
+//! - Type-safe compile-time annotation passes (e.g., for compilers or macro systems)
+//! - Fine-grained control over API availability based on past actions
+//!
+//! ## See Also
+//!
+//! - [PhantomData](https://doc.rust-lang.org/std/marker/struct.PhantomData.html)
+//! - [Typestate pattern](https://en.wikipedia.org/wiki/Typestate_analysis)
+//!
 
 use itertools::Itertools;
 use proc_macro::TokenStream;

@@ -1,10 +1,14 @@
 [package]
 name = "typelist"
 version = "0.1.0"
+authors = ["Asbjørn Rysgaard Eriksen <mail@bliztle.com>"]
 edition = "2021"
 
 [lib]
 proc-macro = true
+
+[lints.clippy]
+pedantic = "warn"
 
 [dev-dependencies]
 assert-tokenstreams-eq = "0.1.0"
@@ -14,3 +18,4 @@ itertools = "0.13.0"
 proc-macro2 = "1.0.92"
 quote = "1.0.37"
 syn = "2.0.90"
+compiletest_rs = "0.11.2"

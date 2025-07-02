@@ -1,6 +1,6 @@
 [workspace]
 members = [
     "typelist",
-    "orphan-instance-lang"
+    "orphan-instance-lang", 
 ]
 resolver = "2"

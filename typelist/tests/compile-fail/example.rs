@@ -1,3 +1,4 @@
+extern crate typelist;
 use std::marker::PhantomData;
 use typelist::typelist;
 
@@ -73,23 +74,19 @@ pub fn mark_main() {
     node.foo().bar().only_on_nil();
 
     node.bar().foo().only_on_food_and_bard();
-    // node.bar().only_on_food_and_bard();
-    // node.foo().only_on_food_and_bard();
+    node.bar().only_on_food_and_bard();
+    //~^ error: the trait bound `orphan_instance_lang::node::Nil: Annotation` is not satisfied [E0277]
+    node.foo().only_on_food_and_bard();
 
-    node.foo().only_on_food(); // Good
-    node.foo().bar().only_on_food(); // Good
-    node.bar().foo().only_on_food(); // Good
-    node.bar().foo().bar().only_on_food(); // Good
-                                           // node.bar().foo().bar().bar().only_on_food(); // Good
+    node.foo().only_on_food();
+    node.foo().bar().only_on_food();
+    node.bar().foo().only_on_food();
+    node.bar().foo().bar().only_on_food();
+    node.bar().foo().bar().bar().only_on_food();
+    node.bar().foo().bar().bar().bar().only_on_food();
+
     node.foo().foo().only_on_food();
 
-    // node.foo2().only_on_food();
-    // node.foo2().bar().only_on_food();
-    // node.foo2().bar().bar().only_on_food();
-
-    // node.bar().bar().only_on_food(); // Bad (commented to prevent compile error)
-    // node.only_on_food(); // Bad (commented to prevent compile error)
-    //
-    let nb = node.foo().bar();
-    // nb.only_on_food()
+    node.bar().bar().only_on_food(); // Bad (commented to prevent compile error)
+    node.only_on_food(); // Bad (commented to prevent compile error)
 }
