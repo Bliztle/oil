@@ -1,0 +1,125 @@
+error[E0277]: the trait bound `Nil: Annotation` is not satisfied
+ --> tests/trybuild/node-annotation.rs:8:25
+  |
+8 |     let _: &Type = node.get_annotation(); // Shouldn't be able to get annotation not added
+  |                         ^^^^^^^^^^^^^^ the trait `Annotation` is not implemented for `Nil`
+  |
+  = help: the trait `Annotation` is implemented for `Type`
+note: required by a bound in `Node::<T, S>::get_annotation`
+ --> src/node.rs
+  |
+  |     pub fn get_annotation<U>(&self) -> &U
+  |            -------------- required by a bound in this associated function
+  |     where
+  |         U: Annotation,
+  |            ^^^^^^^^^^ required by this bound in `Node::<T, S>::get_annotation`
+
+error[E0308]: mismatched types
+ --> tests/trybuild/node-annotation.rs:8:20
+  |
+8 |     let _: &Type = node.get_annotation(); // Shouldn't be able to get annotation not added
+  |            -----   ^^^^^^^^^^^^^^^^^^^^^ expected `&Type`, found `&Nil`
+  |            |
+  |            expected due to this
+  |
+  = note: expected reference `&Type`
+             found reference `&Nil`
+
+error[E0277]: the trait bound `Nil: Annotation` is not satisfied
+ --> tests/trybuild/node-annotation.rs:9:28
+  |
+9 |     node.change_annotation(Type::I32); // Shouldn't be able to change annotation not added
+  |          ----------------- ^^^^^^^^^ the trait `Annotation` is not implemented for `Nil`
+  |          |
+  |          required by a bound introduced by this call
+  |
+  = help: the trait `Annotation` is implemented for `Type`
+note: required by a bound in `Node::<T, S>::change_annotation`
+ --> src/node.rs
+  |
+  |     pub fn change_annotation<U>(&mut self, annotation: U)
+  |            ----------------- required by a bound in this associated function
+  |     where
+  |         U: Annotation,
+  |            ^^^^^^^^^^ required by this bound in `Node::<T, S>::change_annotation`
+
+error[E0308]: mismatched types
+ --> tests/trybuild/node-annotation.rs:9:28
+  |
+9 |     node.change_annotation(Type::I32); // Shouldn't be able to change annotation not added
+  |          ----------------- ^^^^^^^^^ expected `Nil`, found `Type`
+  |          |
+  |          arguments to this method are incorrect
+  |
+note: method defined here
+ --> src/node.rs
+  |
+  |     pub fn change_annotation<U>(&mut self, annotation: U)
+  |            ^^^^^^^^^^^^^^^^^
+
+error[E0277]: the trait bound `Cons<Type, Nil>: Excludes<_>` is not satisfied
+  --> tests/trybuild/node-annotation.rs:11:36
+   |
+11 |     let node = node.add_annotation(Type::I32); // Shouldn't be able to add annotation twice
+   |                     -------------- ^^^^^^^^^ the trait `Excludes<_>` is not implemented for `Cons<Type, Nil>`
+   |                     |
+   |                     required by a bound introduced by this call
+   |
+   = help: the trait `Excludes<T>` is implemented for `Nil`
+note: required by a bound in `Node::<T, S>::add_annotation`
+  --> src/node.rs
+   |
+   |     pub fn add_annotation<U>(mut self, annotation: U) -> Node<T, Cons<U, S>>
+   |            -------------- required by a bound in this associated function
+...
+   |         S: Excludes<U>,
+   |            ^^^^^^^^^^^ required by this bound in `Node::<T, S>::add_annotation`
+
+error[E0277]: the trait bound `Cons<Type, Cons<Type, Nil>>: Excludes<_>` is not satisfied
+  --> tests/trybuild/node-annotation.rs:12:43
+   |
+12 |     let _ = node.add_annotation_unchecked(Type::I32); // Shouldn't be able to add unchecked when annotation is already checked
+   |                  ------------------------ ^^^^^^^^^ the trait `Excludes<_>` is not implemented for `Cons<Type, Cons<Type, Nil>>`
+   |                  |
+   |                  required by a bound introduced by this call
+   |
+   = help: the trait `Excludes<T>` is implemented for `Nil`
+note: required by a bound in `Node::<T, S>::add_annotation_unchecked`
+  --> src/node.rs
+   |
+   |     pub fn add_annotation_unchecked<U>(&mut self, annotation: U)
+   |            ------------------------ required by a bound in this associated function
+...
+   |         S: Excludes<U>,
+   |            ^^^^^^^^^^^ required by this bound in `Node::<T, S>::add_annotation_unchecked`
+
+error[E0277]: the trait bound `Cons<Type, Cons<Type, Nil>>: Excludes<_>` is not satisfied
+  --> tests/trybuild/node-annotation.rs:13:25
+   |
+13 |     let _: &Type = node.get_annotation_unchecked(); // Shouldn't be able to get unchecked when annotation is already checked
+   |                         ^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Excludes<_>` is not implemented for `Cons<Type, Cons<Type, Nil>>`
+   |
+   = help: the trait `Excludes<T>` is implemented for `Nil`
+note: required by a bound in `Node::<T, S>::get_annotation_unchecked`
+  --> src/node.rs
+   |
+   |     pub fn get_annotation_unchecked<U>(&self) -> Option<&U>
+   |            ------------------------ required by a bound in this associated function
+...
+   |         S: Excludes<U>,
+   |            ^^^^^^^^^^^ required by this bound in `Node::<T, S>::get_annotation_unchecked`
+
+error[E0308]: mismatched types
+  --> tests/trybuild/node-annotation.rs:13:20
+   |
+13 |     let _: &Type = node.get_annotation_unchecked(); // Shouldn't be able to get unchecked when annotation is already checked
+   |            -----   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `&Type`, found `Option<&_>`
+   |            |
+   |            expected due to this
+   |
+   = note: expected reference `&Type`
+                   found enum `Option<&_>`
+help: consider using `Option::expect` to unwrap the `Option<&_>` value, panicking if the value is an `Option::None`
+   |
+13 |     let _: &Type = node.get_annotation_unchecked().expect("REASON"); // Shouldn't be able to get unchecked when annotation is already checked
+   |                                                   +++++++++++++++++

@@ -121,43 +121,6 @@ typelist = { path = "../typelist" }
 
 ---
 
-## 🧪 Testing
-
-Run tests from the **workspace root** to avoid issues with duplicated dylib paths when using `compiletest_rs`.
-
-```bash
-cargo test
-```
-
-### ⚠️ Known Issue: `multiple candidates for dylib dependency 'typelist' [E0464]`
-
-If you see the error:
-
-```
-error[E0464]: multiple candidates for `dylib` dependency `typelist` found
-```
-
-**This may happen if:**
-
-- You've previously run `cargo test` from *within* the `typelist/` directory.
-- You’re using `compiletest_rs` for compile-fail tests.
-
-**Workaround:**
-
-```bash
-cargo clean
-cargo test
-```
-
-Run this from the root of your workspace. Avoid running tests from inside the `typelist/` crate directly.
-
----
-
 ## 📄 License
 
-Licensed under either of:
-
-- [MIT License](LICENSE-MIT)
-- [Apache License (Version 2.0)](LICENSE-APACHE)
-
-at your option.
+Licensed under the [MIT License](LICENSE-MIT)

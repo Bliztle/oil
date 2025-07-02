@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["Asbjørn Rysgaard Eriksen <mail@bliztle.com>"]
 edition = "2021"
 
-[[bin]]
+[[bin]] # Define the binary name and entry point
 name = "oil"
 path = "src/main.rs"
 
@@ -18,4 +18,5 @@ lalrpop = "0.22.0"
 typelist = { path = "../typelist" }
 clap = { version = "4.5.23", features = ["derive"] }
 lalrpop-util = { version = "0.22.0", features = ["lexer", "unicode"] }
-compiletest_rs = "0.11.2"
+test_each_file = "0.3.5"
+trybuild = "1.0.105"

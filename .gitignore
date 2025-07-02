@@ -1,2 +1,9 @@
+# Rust
 target
+
+# Rust deps
+wip
+
+# Nix
+.direnv
 result

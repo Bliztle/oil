@@ -1,0 +1,134 @@
+error[E0599]: the method `only_on_food_and_bard` exists for struct `Node<Cons<Bar, Nil>>`, but its trait bounds were not satisfied
+  --> tests/trybuild/example.rs:78:16
+   |
+8  | typelist!(3, Foo, Bar);
+   | ---------------------- doesn't satisfy `Cons<Bar, Nil>: Includes<Foo>`
+...
+11 | struct Node<S> {
+   | -------------- method `only_on_food_and_bard` not found for this struct
+...
+78 |     node.bar().only_on_food_and_bard(); // Bad. Need both Foo and Bar
+   |                ^^^^^^^^^^^^^^^^^^^^^
+   |
+note: trait bound `Cons<Bar, Nil>: Includes<Foo>` was not satisfied
+  --> tests/trybuild/example.rs:61:8
+   |
+59 | impl<S> Node<S>
+   |         -------
+60 | where
+61 |     S: Includes<Foo> + Includes<Bar>,
+   |        ^^^^^^^^^^^^^ unsatisfied trait bound introduced here
+note: the trait `Includes` must be implemented
+  --> tests/trybuild/example.rs:8:1
+   |
+8  | typelist!(3, Foo, Bar);
+   | ^^^^^^^^^^^^^^^^^^^^^^
+   = note: this error originates in the macro `typelist` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0599]: the method `only_on_food_and_bard` exists for struct `Node<Cons<Foo, Nil>>`, but its trait bounds were not satisfied
+  --> tests/trybuild/example.rs:79:16
+   |
+8  | typelist!(3, Foo, Bar);
+   | ---------------------- doesn't satisfy `Cons<Foo, Nil>: Includes<Bar>`
+...
+11 | struct Node<S> {
+   | -------------- method `only_on_food_and_bard` not found for this struct
+...
+79 |     node.foo().only_on_food_and_bard(); // Bad. Need both Foo and Bar
+   |                ^^^^^^^^^^^^^^^^^^^^^
+   |
+note: trait bound `Cons<Foo, Nil>: Includes<Bar>` was not satisfied
+  --> tests/trybuild/example.rs:61:24
+   |
+59 | impl<S> Node<S>
+   |         -------
+60 | where
+61 |     S: Includes<Foo> + Includes<Bar>,
+   |                        ^^^^^^^^^^^^^ unsatisfied trait bound introduced here
+note: the trait `Includes` must be implemented
+  --> tests/trybuild/example.rs:8:1
+   |
+8  | typelist!(3, Foo, Bar);
+   | ^^^^^^^^^^^^^^^^^^^^^^
+   = note: this error originates in the macro `typelist` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0599]: the method `only_on_food` exists for struct `Node<Cons<Bar, Cons<Bar, Cons<Foo, Cons<Bar, Nil>>>>>`, but its trait bounds were not satisfied
+  --> tests/trybuild/example.rs:85:34
+   |
+8  | typelist!(3, Foo, Bar);
+   | ---------------------- doesn't satisfy `_: Includes<Foo>`
+...
+11 | struct Node<S> {
+   | -------------- method `only_on_food` not found for this struct
+...
+85 |     node.bar().foo().bar().bar().only_on_food(); // Bad, typelist! was called with depth 3
+   |                                  ^^^^^^^^^^^^
+   |
+note: trait bound `Cons<Bar, Cons<Bar, Cons<Foo, Cons<Bar, Nil>>>>: Includes<Foo>` was not satisfied
+  --> tests/trybuild/example.rs:52:8
+   |
+50 | impl<S> Node<S>
+   |         -------
+51 | where
+52 |     S: Includes<Foo>,
+   |        ^^^^^^^^^^^^^ unsatisfied trait bound introduced here
+note: the trait `Includes` must be implemented
+  --> tests/trybuild/example.rs:8:1
+   |
+8  | typelist!(3, Foo, Bar);
+   | ^^^^^^^^^^^^^^^^^^^^^^
+   = note: this error originates in the macro `typelist` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0599]: the method `only_on_food` exists for struct `Node<Cons<Bar, Cons<Bar, Nil>>>`, but its trait bounds were not satisfied
+  --> tests/trybuild/example.rs:89:22
+   |
+8  | typelist!(3, Foo, Bar);
+   | ---------------------- doesn't satisfy `Cons<Bar, Cons<Bar, Nil>>: Includes<Foo>`
+...
+11 | struct Node<S> {
+   | -------------- method `only_on_food` not found for this struct
+...
+89 |     node.bar().bar().only_on_food(); // Bad. Need Foo
+   |                      ^^^^^^^^^^^^
+   |
+note: trait bound `Cons<Bar, Cons<Bar, Nil>>: Includes<Foo>` was not satisfied
+  --> tests/trybuild/example.rs:52:8
+   |
+50 | impl<S> Node<S>
+   |         -------
+51 | where
+52 |     S: Includes<Foo>,
+   |        ^^^^^^^^^^^^^ unsatisfied trait bound introduced here
+note: the trait `Includes` must be implemented
+  --> tests/trybuild/example.rs:8:1
+   |
+8  | typelist!(3, Foo, Bar);
+   | ^^^^^^^^^^^^^^^^^^^^^^
+   = note: this error originates in the macro `typelist` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0599]: the method `only_on_food` exists for struct `Node<Nil>`, but its trait bounds were not satisfied
+  --> tests/trybuild/example.rs:90:10
+   |
+8  | typelist!(3, Foo, Bar);
+   | ---------------------- doesn't satisfy `Nil: Includes<Foo>`
+...
+11 | struct Node<S> {
+   | -------------- method `only_on_food` not found for this struct
+...
+90 |     node.only_on_food(); // Bad. Need Foo
+   |          ^^^^^^^^^^^^
+   |
+note: trait bound `Nil: Includes<Foo>` was not satisfied
+  --> tests/trybuild/example.rs:52:8
+   |
+50 | impl<S> Node<S>
+   |         -------
+51 | where
+52 |     S: Includes<Foo>,
+   |        ^^^^^^^^^^^^^ unsatisfied trait bound introduced here
+note: the trait `Includes` must be implemented
+  --> tests/trybuild/example.rs:8:1
+   |
+8  | typelist!(3, Foo, Bar);
+   | ^^^^^^^^^^^^^^^^^^^^^^
+   = note: this error originates in the macro `typelist` (in Nightly builds, run with -Z macro-backtrace for more info)

@@ -1,0 +1,15 @@
+trait B { 
+    fn foo() -> i32
+}
+
+impl C of B for A { 
+    fn foo() -> i32 { 1 }
+}
+
+impl D of B for A { 
+    fn foo() -> i32 { 2 }
+}
+
+fn main() {
+
+}

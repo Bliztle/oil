@@ -65,7 +65,8 @@ where
     }
 }
 
-pub fn mark_main() {
+#[rustfmt::skip]
+pub fn main() {
     let node = Node::default();
 
     node.only_on_nil();
@@ -74,19 +75,17 @@ pub fn mark_main() {
     node.foo().bar().only_on_nil();
 
     node.bar().foo().only_on_food_and_bard();
-    node.bar().only_on_food_and_bard();
-    //~^ error: the trait bound `orphan_instance_lang::node::Nil: Annotation` is not satisfied [E0277]
-    node.foo().only_on_food_and_bard();
+    node.bar().only_on_food_and_bard(); // Bad. Need both Foo and Bar
+    node.foo().only_on_food_and_bard(); // Bad. Need both Foo and Bar
 
     node.foo().only_on_food();
     node.foo().bar().only_on_food();
     node.bar().foo().only_on_food();
     node.bar().foo().bar().only_on_food();
-    node.bar().foo().bar().bar().only_on_food();
-    node.bar().foo().bar().bar().bar().only_on_food();
+    node.bar().foo().bar().bar().only_on_food(); // Bad, typelist! was called with depth 3
 
     node.foo().foo().only_on_food();
 
-    node.bar().bar().only_on_food(); // Bad (commented to prevent compile error)
-    node.only_on_food(); // Bad (commented to prevent compile error)
+    node.bar().bar().only_on_food(); // Bad. Need Foo
+    node.only_on_food(); // Bad. Need Foo
 }

@@ -1,0 +1,3 @@
+trait trait { 
+    fn foo() -> i32
+}
