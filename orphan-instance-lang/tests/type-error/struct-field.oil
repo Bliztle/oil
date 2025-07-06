@@ -1,0 +1,14 @@
+struct Foo {
+    a: i32,
+    b: f32,
+}
+
+struct Bar {
+    a: i32,
+    b: i32
+}
+
+fn main() {
+    Foo { a: 1, b: 2 };
+    Foo { a: 1, b: .3 }
+}

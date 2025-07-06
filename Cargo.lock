@@ -385,6 +385,7 @@ dependencies = [
  "clap",
  "lalrpop",
  "lalrpop-util",
+ "regex",
  "test_each_file",
  "trybuild",
  "typelist",

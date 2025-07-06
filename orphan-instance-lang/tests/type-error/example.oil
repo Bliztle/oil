@@ -1,0 +1,46 @@
+// Define a struct in one module
+mod A {
+    struct A {}
+}
+
+// Define a trait in another module
+mod B {
+    trait B { 
+        fn foo() -> i32
+    }
+}
+
+// Implement the trait in two other modules
+mod C {
+    impl C of B::B for A::A { 
+        fn foo() { 1 }
+    }
+}
+
+mod D {
+    impl D of B::B for A::A { 
+        fn foo() { 2 }
+    }
+
+    // This module also defines a function using the implementation.
+    // Unambiguous, as exactly 1 implementation exists in this module
+    fn unambiguous(a: A::A) { a.foo() }
+}
+
+// Now try to use the impls in yet another module
+mod E {
+    // Which implementation should this use?
+    fn ambiguous(a: A::A) { a.foo() }
+
+    // This clearly defines which version to use
+    fn unambiguous(a: A) {
+        use C in { ambiguous(A); };
+    }
+
+    fn Main() {
+        let a = A::A { }; // Make instance
+        D::unambiguous(a); // Explicitly disambiguated
+        unambiguous(a); // Equivalent to "C::foo(a);"
+        ambiguous(a); // "Warning: Marked requires implementation of B for A. 2 conflicting implementations exists"
+    }
+}

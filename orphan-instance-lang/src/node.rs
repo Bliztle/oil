@@ -21,7 +21,7 @@ impl Annotation for Type {}
 pub struct Node<T, S = Nil> {
     pub node: T,
     annotations: HashMap<TypeId, Box<dyn Any>>,
-    pub _state: PhantomData<S>,
+    _state: PhantomData<S>,
 }
 
 impl<T> From<T> for Node<T> {
@@ -114,6 +114,6 @@ mod test {
         let node: Node<i32> = 0.into();
         let mut node = node.add_annotation(Type::I32);
         let _: &Type = node.get_annotation();
-        node.change_annotation(Type::U32);
+        node.change_annotation(Type::F32);
     }
 }

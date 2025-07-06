@@ -1,4 +1,4 @@
-use crate::ast::{BinOp, Definition, Program, TraitMethod, Ident, Impl, Type, Function, Parameter, Expr, Literal};
+use crate::ast::{BinOp, Definition, Program, TraitMethod, Ident, Impl, Type, Function, Parameter, Expr, Literal, StructField};
 use std::str::FromStr;
 
 grammar;
@@ -6,6 +6,7 @@ grammar;
 pub programRule: Program = definition* => Program { nodes: <> };
 
 definition: Definition = {
+    struct,
     trait,
     impl,
     mod,
@@ -13,8 +14,14 @@ definition: Definition = {
 }
 
 pub trait: Definition = {
-    "trait" <i:ident> "{" <methods:trait_method*> "}"=> Definition::Trait(i, methods)
+    "trait" <i:ident> "{" <methods:trait_method*> "}" => Definition::Trait(i, methods)
 }
+
+struct: Definition = {
+    "struct" <i:ident> "{" <fields:(<struct_field> ",")*> "}" => Definition::Struct(i, fields),
+    "struct" <i:ident> "{" <mut fields:(<struct_field> ",")*> <last_field:struct_field> "}" => { fields.push(last_field); Definition::Struct(i, fields) },
+}
+struct_field: StructField = <i:ident> ":" <t:explicit_type> => StructField { ident: i, field_type: t };
 
 pub trait_method: TraitMethod = {
     "fn" <i:ident> "(" <parameters:parameter*> ")" "->" <return_type:explicit_type> => TraitMethod { ident: i, parameters, return_type }
@@ -23,12 +30,14 @@ pub trait_method: TraitMethod = {
 pub impl: Definition = {
     "impl" <struct_ident:ident> "{" <f:func+> "}" 
         => Definition::Impl(Impl::Struct(struct_ident, f)),
-    "impl" <impl_ident:(<ident> "of")?> <trait_ident:ident> "for" <struct_ident:ident> "{" <f:func+> "}"
+    "impl" <impl_ident:(<ident> "of")?> <trait_ident:tident> "for" <struct_ident:tident> "{" <f:func+> "}"
         => Definition::Impl(Impl::Trait( impl_ident, trait_ident, struct_ident, f))
 }
 
 pub mod: Definition = {
-    "mod" => Definition::Mod
+    // TODO: Implement declaring modules for different files
+    // "mod" <i:ident> ";" => Definition::Mod(i),
+    "mod" <i:ident> "{" <d:definition*> "}"=> Definition::Mod(i, d),
 }
 
 pub func: Function = {
@@ -43,20 +52,17 @@ pub func: Function = {
 pub parameter: Parameter = <i:ident>":"<t:explicit_type> => Parameter { ident: i, parameter_type: t };
 
 pub explicit_type: Type = {
-    // Unit type allows for spaces, as parser errors on `fn my_func()` if not, since lexer makes a
-    // "()" token
     "(" ")" => Type::Unit,
     "i32" => Type::I32,
-    "u32" => Type::U32,
-    "fn" "(" <parameters:Comma<parameter>?> ")" "->" <return_type:explicit_type> => Type::Function(parameters.unwrap_or(vec![]), return_type.into()),
-    ident => Type::Ident(<>)
+    "f32" => Type::F32,
+    // "fn" "(" <parameters:Comma<parameter>?> ")" "->" <return_type:explicit_type> => Type::Function(parameters.unwrap_or(vec![]), return_type.into()),
+    tident => Type::Ident(<>)
 }
 
 pub expr_statement: Expr = {
-    "let" <i:ident> "=" <value:expr> => Expr::Let(i, value.into()),
-    block_expr => <>,
-    invocation_expr => <>,
-    if_expr => <>,
+    let_expr,
+    use_expr,
+    expr,
 }
 
 pub expr: Expr = {
@@ -83,19 +89,63 @@ expr3: Expr = {
 expr4: Expr = {
     r"[0-9]+" => Expr::Literal(Literal::I32(i32::from_str(<>).unwrap())),
     r"[0-9]*\.[0-9]+" => Expr::Literal(Literal::F32(<>.parse().unwrap())),
-    ident => Expr::Ident(<>),
+    qident => Expr::Ident(<>),
     "(" <e:expr> ")" => Expr::Paren(e.into()),
     block_expr => <>,
     invocation_expr => <>,
     if_expr => <>,
+    structinit_expr => <>,
 }
 
-// Expressions which are also statements
-block_expr: Expr = "{" <mut exprs:(<expr_statement> ";")*> <ret:expr?> "}" => { if let Some(e) = ret { exprs.push(e) }; Expr::Block(exprs) };
-invocation_expr: Expr = <i:ident> "(" <exprs:Comma<expr>?> ")" => Expr::Invocation(i, exprs.unwrap_or(vec![]));
-if_expr: Expr = "if" <cond:expr> <yes:block_expr> "else" <no:block_expr> => Expr::If(cond.into(), yes.into(), no.into());
+block_expr: Expr = {
+    "{" <exprs:(<expr_statement> ";")*> "}" => Expr::Block(exprs, None),
+    "{" <exprs:(<expr_statement> ";")*> <ret:expr_statement> "}" => Expr::Block(exprs, Some(ret.into()))
+}
+invocation_expr: Expr = {
+    <i:any_ident> "(" <exprs:Comma<expr>?> ")" => Expr::Invocation(i, exprs.unwrap_or(vec![])),
+    // <i:ident> "(" <exprs:Comma<expr>?> ")" => Expr::Invocation(i, exprs.unwrap_or(vec![])),
+    // <i1:ident>"::"<i2:tident> "(" <exprs:Comma<expr>?> ")" => { 
+    //     let v = vec![i1];
+    //     Expr::Invocation(i, exprs.unwrap_or(vec![])) 
+    // }
+    // <i1:ident>"."<i2:qident> "(" <exprs:Comma<expr>?> ")" => { Expr::Invocation(i, exprs.unwrap_or(vec![])) }
+}
+if_expr: Expr = {
+    "if" <cond:expr> "then" <yes:block_expr> => Expr::If(cond.into(), yes.into(), None),
+    "if" <cond:expr> "then" <yes:block_expr> "else" <no:block_expr> => Expr::If(cond.into(), yes.into(), Some(no.into()))
+}
+if_cond_yes: (Expr, Expr) = {
 
-pub ident: Ident = r"[a-zA-Z_][a-zA-Z_0-9]*" => Ident(<>.into());
+}
+use_expr: Expr = "use" <i:tident> "in" <e:expr> => Expr::Use(i, e.into());
+let_expr: Expr = {
+    "let" <i:ident> "=" <value:expr> => Expr::Let(i, None, value.into()),
+    "let" <i:ident> ":" <t:explicit_type> "=" <value:expr> => Expr::Let(i, Some(t.into()), value.into(), ),
+}
+structinit_expr: Expr = {
+    <i:tident> "{" <fields:(<structinit_expr_field> ",")*> "}" => Expr::StructInit(i, fields),
+    <i:tident> "{" <mut fields:(<structinit_expr_field> ",")*> <last_field:structinit_expr_field> "}" => {
+        fields.push(last_field);
+        Expr::StructInit(i, fields)
+    }
+}
+structinit_expr_field: (Ident, Expr) = <i:ident> ":" <e:expr> => (i, e);
+
+ident_str: String = r"[a-zA-Z_][a-zA-Z_0-9]*" => <>.into();
+pub ident: Ident = ident_str => Ident::Simple(<>);
+pub tident: Ident = {
+    ident,
+    <is:(<ident_str> "::")+> <i:ident_str> => Ident::Qualified(<>)
+}
+pub qident: Ident = {
+    ident,
+    <is:(<ident_str> ".")+> <i:ident_str> => Ident::Qualified(<>)
+}
+pub any_ident: Ident = {
+    ident,
+    <is:(<ident_str> "::")+> <i:ident_str> => Ident::Qualified(<>),
+    <is:(<ident_str> ".")+> <i:ident_str> => Ident::Qualified(<>)
+}
 
 // Utility Definitions
 Comma<T>: Vec<T> = <mut v:(<T> ",")*><e:T> => { v.push(e); v };
