@@ -1,3 +1,6 @@
+> [!NOTE]
+> All code in this crate was written by hand, though the documentation has obviously had the AI touch
+ 
 # `typelist`
 
 A flexible and zero-cost abstraction over the *typestate pattern*, enabling type-level state tracking in Rust through compile-time type lists.
